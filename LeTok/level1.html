@@ -18,36 +18,29 @@
 				stroke: black;
 				shape-rendering: crispEdges;
 			}
-
 			.axis text {
 				font-family: sans-serif;
 				font-size: 11px;
 			}
-
 			.tooltip {
   				position: absolute;
   				width: 200px;
   				height: 28px;
   				pointer-events: none;
 			}
-
 			path {
 			  fill-opacity: .8;
 			}
-
 			path.selected {
 			  fill-opacity: .2;
 			}
-
 			#wrap{
 				border: 1px solid white;
 				width: 600px;
 			}
-
 			div {
     		float: left;
 			}
-
 			.legend rect {
   			fill:white;
   			stroke:black;
@@ -86,45 +79,34 @@
 				sURLVariables = sPageURL.split('&'),
 				sParameterName,
 				i;
-
 			for (i = 0; i < sURLVariables.length; i++) {
 				sParameterName = sURLVariables[i].split('=');
-
 				if (sParameterName[0] === sParam) {
 					return sParameterName[1] === undefined ? true : sParameterName[1];
 				}
 			}
 		};
-
 			//Width and height
 			var w = 600;
 			var h = 600;
 			var padding = 30;
-
 			// add the tooltip area to the webpage
 			var tooltip = d3.select("body").append("div")
     			.attr("class", "tooltip")
     			.style("opacity", 0);
-
 			var dataset;
 			var firstRow;
-
 			var l1cset;
 			var l1sset;
 			var l1shset;
 			var legendParam;
-
 			var type = getUrlParameter("type");
-
 			var l1cset = (localStorage.getItem("l1cset"+"-"+type) == null) ? undefined : JSON.parse(localStorage.getItem("l1cset"+"-"+type));
 			var l1shset = (localStorage.getItem("l1shset"+"-"+type) == null) ? undefined : JSON.parse(localStorage.getItem("l1shset"+"-"+type));
 			var l1sset = (localStorage.getItem("l1sset"+"-"+type) == null) ? undefined  : JSON.parse(localStorage.getItem("l1sset"+"-"+type));
-
 			var selection = (localStorage.getItem("modselection"+"-"+type) == null) ? [] : JSON.parse(localStorage.getItem("modselection"+"-"+type));
-
-			d3.tsv(type+".models.tsv", function(error, data) {
+			d3.tsv(type+".tsv", function(error, data) {
 				dataset = data;
-
 			// Extracts the first token name, assumes this is the type and sets it as the page title
 			//var type = data[1]["_id"].match(/\w+/)
 //			var type = window.location.pathname.split("/")[2]
@@ -132,23 +114,19 @@
 			d3.select("body").select("h2").text("Level 1: " + type);
 			d3.select("body").select("p").append("a").attr("href", "level2.html?type="+type).text("down");
 //			d3.select("body").select("p").append("p").text("isoMDS stress: " + data[0]["stress"]).style("font-size", "10px");
-
 			colnames = d3.keys(data[0]);
 			// Takes the first columns that end with ".x" and ".y"
 			xcol = colnames.filter(function(d) { return d.endsWith(".x"); })[0];
 			ycol = colnames.filter(function(d) { return d.endsWith(".y"); })[0];
 			othercols = colnames.filter(function(d) {return (!d.endsWith(".x") && !d.endsWith(".y"))});
 			firstRow = d3.entries(dataset[1]).filter(function(d) { if (othercols.indexOf(d.key) >= 0) {return d.value;}; });
-			models = d3.entries(dataset).filter(function (d) {return d["_id"]});
-
+			models = d3.entries(dataset).filter(function (d) {return d["id"]});
 		  function isNumber(obj) { return !isNaN(parseFloat(obj)) }
-
 			nominals = firstRow.filter(function(d) { if (!isNumber(d.value) && !d.key.startsWith("_")) { return d.key; } });
 			numericals = firstRow.filter(function(d) { if (isNumber(d.value)) { return d.key; } });
 			console.log(firstRow)
 			// colours = ["wWindow", "wScheme"];
 			// size = ["windowSize", "MDSstress"];
-
 			// Create selection menu for colour-coding
 			var colourDropDown = d3.select("#colour")
 									.attr("name", "Colour")
@@ -161,7 +139,6 @@
 									.attr("xlink:href", "#")
 									.attr("value", function (d) { return d.key; })
 									.text(function (d) { return d.key; });
-
 			var shapeDropDown = d3.select("#shape")
 									.attr("name", "Shape")
 									.selectAll("option")
@@ -173,7 +150,6 @@
 									.attr("xlink:href", "#")
 									.attr("value", function (d) { return d.key; })
 									.text(function (d) { return d.key; });
-
 			var sizeDropDown = d3.select("#size")
 									.attr("name", "Size")
 									.selectAll("option")
@@ -185,7 +161,6 @@
 									.attr("xlink:href", "#")
 									.attr("value", function (d) { return d.key; })
 									.text(function (d) { return d.key; });
-
 			// Add a "reset" option
 			function addReset(selector, reference) {
 				d3.select(selector)
@@ -196,41 +171,34 @@
 					.attr("value", "reset")
 					.text("Reset");
 			}
-
 			addReset("#size", "siz");
 			addReset("#shape", "shape");
 			addReset("#colour", "col");
-
 			//Create scale functions
 			var xScale = d3.scale.linear()
 								 .domain([d3.min(dataset, function(d) { return +d[xcol]; }) * 1.1, d3.max(dataset, function(d) { return +d[xcol]; }) * 1.1])
 								 .range([padding, w - padding * 2]);
-
 			var yScale = d3.scale.linear()
 								 .domain([d3.min(dataset, function(d) { return +d[ycol]; }) * 1.1, d3.max(dataset, function(d) { return +d[ycol]; }) * 1.1])
 								 .range([h - padding, padding]);
-
 			//Define X axis
 			var xAxis = d3.svg.axis()
 							  .scale(xScale)
 							  .orient("bottom")
 							  .ticks(10)
 							  .outerTickSize(0);
-
 			//Define Y axis
 			var yAxis = d3.svg.axis()
 							  .scale(yScale)
 							  .orient("left")
 							  .ticks(10)
 							  .outerTickSize(0);
-
 			//Zoom
 			var zoom = d3.behavior.zoom()
 						.scaleExtent([0, 10])
 						.x(xScale)
 						.y(yScale)
 						.on("zoom", zoomed);
-
 			//Create SVG element
 			var svg = d3.select("body")
 						.append("div")
@@ -240,28 +208,22 @@
 						.attr("height", h)
 						.append("g")
 						.call(zoom);
-
 			var rect = svg.append("rect")
 						.attr("width", w)
 						.attr("height", h)
 						.style("fill", "none")
 						.style("pointer-events", "all");
-
 			var container = svg.append("g");
-
 			//Create color scale
 			var getColors = d3.scale.category10();
-
 			//Create dot size scale
 			var getClustSize = d3.scale.sqrt();
-
 			//Create shape scale
 			var getShape = d3.scale.ordinal().range(["cross", "diamond", "square", "triangle-down", "triangle-up"]);
-
 			dot = container.append("g")
 				.attr("class", "dot")
 				.selectAll("path")
-				.data(dataset, function(d) { return d["_id"]; })
+				.data(dataset, function(d) { return d["id"]; })
 				.enter()
 				.append("path")
 				.attr("transform", function(d) { return "translate(" + xScale(d[xcol]) + "," + yScale(d[ycol]) + ")"; })
@@ -276,7 +238,7 @@
 				.style("fill", function(d) { (l1cset === "undefined") ? out="#1f77b4" : out=getColors(d[l1cset]); return out; })
 				.classed("selected", function(d) {
 					if (selection.length > 0) {
-						return !(selection.indexOf(d["_id"]) > -1);
+						return !(selection.indexOf(d["id"]) > -1);
 					}
 				 })
 				 .attr("data-legend", " ")
@@ -284,7 +246,7 @@
           		tooltip.transition()
 					.duration(200)
 					.style("opacity", .9);
-          		tooltip.html("<b>" + d["_id"] + "</b>" + (typeof l1sset  !== "undefined" ? "<p><b>"+l1sset+"</b>: " + d[l1sset] : "" ))
+          		tooltip.html("<b>" + d["id"] + "</b><br>" + d["text"]) //+ (typeof l1sset  !== "undefined" ? "<p><b>"+l1sset+"</b>: " + d[l1sset] : "" ))
 					.style("left", (d3.event.pageX + 20) + "px")
 					.style("top", (d3.event.pageY - 28) + "px");
 //				svg.select(".dot").selectAll("circle").style("opacity", .2);
@@ -304,7 +266,7 @@
 					.style("opacity", 0);
 				if (selection.length > 0) {
 					d3.select(this).classed("selected", function(d) {
-						return (selection.indexOf(d["_id"]) === -1);
+						return (selection.indexOf(d["id"]) === -1);
 					});
 				}
 //				svg.select(".dot").selectAll("circle").style("opacity", 1);
@@ -315,34 +277,31 @@
 					// 	window.location = "level2.html";
 					// });
 					.on("click", function(d) {
-							if (selection.indexOf(d["_id"]) === -1) {
-								selection.push(d["_id"]);
+							if (selection.indexOf(d["id"]) === -1) {
+								selection.push(d["id"]);
 							} else {
-								var index = selection.indexOf(d["_id"]);
+								var index = selection.indexOf(d["id"]);
 								if (index > -1) {
 									selection.splice(index, 1);
 								}
 							}
 							if (selection.length > 0) {
 								svg.select(".dot").selectAll("path:not(.selector)").classed("selected", function(d) {
-									return !(selection.indexOf(d["_id"]) > -1);
+									return !(selection.indexOf(d["id"]) > -1);
 								})
 							}
 							localStorage.setItem("modselection"+"-"+type, JSON.stringify(selection));
 					});
-
 			//Create X axis
 			container.append("g")
 				.attr("class", "x axis")
 				.attr("transform", "translate(0," + (h - padding) + ")")
 				.call(xAxis);
-
 			//Create Y axis
 			container.append("g")
 				.attr("class", "y axis")
 				.attr("transform", "translate(" + padding + ",0)")
 				.call(yAxis);
-
  				//On menu change, update colour and/or size
 				d3.selectAll(".col").on("click", function() {
 					value = this.getAttribute("value");
@@ -351,7 +310,6 @@
 					legendParam = l1cset;
 					updateData("colour");
 				});
-
 				d3.selectAll(".shape").on("click", function() {
 					value = this.getAttribute("value");
 					(value == "reset") ? l1shset = null : l1shset = value
@@ -359,30 +317,25 @@
 					legendParam = l1shset;
 					updateData("shape");
 				});
-
 				d3.selectAll(".siz").on("click", function() {
 					value = this.getAttribute("value");
 					(value == "reset") ? l1sset = null : l1sset = value
 					localStorage.setItem("l1sset"+"-"+type, JSON.stringify(l1sset));
 					updateData("size");
 				});
-
 				d3.select("#memory-clear").on("click", function() {
 					localStorage.clear();
 					location.reload();
 				});
-
  				d3.select("#clear-select").on("click", function() {
  					selection = []
  					localStorage.setItem("modselection"+"-"+type, JSON.stringify(selection));
  					svg.selectAll(".selected").classed("selected", false);
  				});
-
 				d3.select("#confirm-select").on("click", function() {
 					localStorage.setItem("goToPlot"+"-"+type, JSON.parse(localStorage.getItem("modselection"+"-"+type))[0].substring(0, JSON.parse(localStorage.getItem("modselection"+"-"+type))[0].length-2));
 					window.location = "level2.html?type="+type;
  				});
-
 				function updateData(feature) {
 				// 		//Update scale domains
 				// 		xScale.domain([d3.min(dataset, function(d) { return +d[xcol]; }) * 1.1, d3.max(dataset, function(d) { return +d[xcol]; }) * 1.1]);
@@ -410,7 +363,6 @@
 							// 			return yScale(d[ycol]);
 							// 		})
 							// .attr("data-legend", function(d) { return d[l1cset]});
-
 				// Refresh the scales
 				getColors = d3.scale.category10();
 				getClustSize = d3.scale.sqrt();
@@ -434,7 +386,6 @@
 					svg.select(".dot").selectAll("path:not(.immutable)").attr("d", d3.svg.symbol().type(function(d) { return getShape(d[l1shset]); })).style("fill", "#1f77b4");
 					console.log("l1shset is not undefined");
 				}
-
 				svg.selectAll("path").attr("data-legend", function(d) {
 					if (feature == "colour") {
 						return d[l1cset];
@@ -442,7 +393,6 @@
 						return d[l1shset];
 					}
 				});
-
 				function createLegend(legendType) {
 					if (legendType == "l1cset") {
 						ypos = 30;
@@ -457,11 +407,9 @@
 						.style("font-size","12px")
 						.call(d3.legend);
 				}
-
 				// if (l1cset !== "undefined" | l1shset !== "undefined") {
 				// 	createLegend();
 				// }
-
 				// if (l1cset !== "undefined" | l1shset !=="undefined") {
 				// 	createLegend("l1cset");
 				// 	createLegend("l1shset");
@@ -470,7 +418,6 @@
 				// } else if (l1shset !== "undefined") {
 				// 	createLegend("l1shset");
 				// }
-
 //				Update legend or append if not created yet after necessary (!) delay
 				if (typeof l1cset !== "undefined") {
 					setTimeout(function() {
@@ -502,21 +449,18 @@
 				}
 				svg.call(zoom);
 			}
-
 			function zoomed() {
 				svg.selectAll(".selector").remove();
 				svg.select("g.x.axis").call(xAxis);
 				svg.select("g.y.axis").call(yAxis);
 				svg.selectAll("path:not(.immutable)").attr("transform", transform);
 			}
-
 			function transform(d) {
 				// Dirty fix for empty path element
 				if (d !== 0) {
 					return "translate(" + xScale(d[xcol]) + "," + yScale(d[ycol]) + ")";
 				}
 			}
-
 			var table = d3.select("body")
 							.append("div")
 							.attr("class", "container")
@@ -531,22 +475,17 @@
 							.enter()
 							.append("th")
 							.text(function (d) { return d; });
-
 			$(document).ready(function() {
 				$('#dataframe').DataTable( {
 					"aaData" : dataset,
 					"aoColumns": [
-						{ mDataProp: "_id" },
-						{ mDataProp: "FirstOrderWeighting"},
-						{ mDataProp: "BNCweighting" },
-						{ mDataProp: "contextWindow" },
-						{ mDataProp: "SecondOrderWindow" },
-						{ mDataProp: "SecondOrderScore" },
-						{ mDataProp: "stress"}
+						{ mDataProp: "id" },
+						{ mDataProp: "word"},
+						{ mDataProp: "sense"},
+						{ mDataProp: "country" }
 					]
 				});
 			});
-
 	});
 		</script>
 
